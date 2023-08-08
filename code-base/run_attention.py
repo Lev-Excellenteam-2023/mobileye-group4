@@ -10,7 +10,8 @@ from matplotlib.axes import Axes
 
 # Internal imports... Should not fail
 from consts import IMAG_PATH, JSON_PATH, NAME, SEQ_IMAG, X, Y, COLOR, RED, GRN, DATA_DIR, TFLS_CSV, CSV_OUTPUT, \
-    SEQ, CROP_DIR, CROP_CSV_NAME, ATTENTION_RESULT, ATTENTION_CSV_NAME, ZOOM, RELEVANT_IMAGE_PATH, COL, ATTENTION_PATH
+    SEQ, CROP_DIR, CROP_CSV_NAME, ATTENTION_RESULT, ATTENTION_CSV_NAME, ZOOM, RELEVANT_IMAGE_PATH, COL, ATTENTION_PATH,\
+    RADIUS
 from misc_goodies import show_image_and_gt
 from data_utils import get_images_metadata
 from crops_creator import create_crops
@@ -39,6 +40,8 @@ def get_coordinates(image):
         selected_contours.append(contour)
 
     coordinates = []
+    radii = []
+
     for contour in selected_contours:
         M = cv2.moments(contour)
         if M["m00"] != 0:
@@ -46,9 +49,13 @@ def get_coordinates(image):
             cY = int(M["m01"] / M["m00"])
             coordinates.append([cX, cY])
 
+            # Calculate minimum enclosing circle
+            (center, radius) = cv2.minEnclosingCircle(contour)
+            radii.append(radius)
+
     image = image.astype(np.float32) / 255
 
-    return coordinates
+    return coordinates, radii
 
 
 def find_tfl_lights(c_image: np.ndarray, **kwargs) -> Dict[str, Any]:
@@ -68,6 +75,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs) -> Dict[str, Any]:
     y_green: List[float] = []
 
     test = beny_threshold(c_image)
+    show_image_and_gt(test, None)
     """
     low_pass_image = low_pass_filter(c_image)
     red_image_thresholding = red_thresholding(low_pass_image)
@@ -75,7 +83,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs) -> Dict[str, Any]:
     maximum_filter_on_red = maximum_filter(high_pass_filter_on_red, size=10)
     show_image_and_gt(maximum_filter_on_red, None)
     """
-    red_coordinates = get_coordinates(test)
+    red_coordinates, radius_coordinates = get_coordinates(test)
 
     for coordinate in red_coordinates:
         x_red.append(coordinate[0])
@@ -88,6 +96,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs) -> Dict[str, Any]:
 
     return {X: x_red + x_green,
             Y: y_red + y_green,
+            RADIUS: 1,
             COLOR: [RED] * len(x_red) + [GRN] * len(x_green),
             }
 
@@ -112,8 +121,9 @@ def test_find_tfl_lights(row: Series, args: Namespace) -> DataFrame:
     attention_dict: Dict[str, Any] = find_tfl_lights(image, some_threshold=42, debug=args.debug)
     attention: DataFrame = pd.DataFrame(attention_dict)
     # Copy all image metadata from the row into the results, so we can track it later
-    # for k, v in row.items():
-    #    attention[k] = v
+    for k, v in row.items():
+        if k != 'x' and k != 'y' and k != 'color' and k != 'radius':
+            attention[k] = v
     tfl_x: np.ndarray = attention[X].values
     tfl_y: np.ndarray = attention[Y].values
     color: np.ndarray = attention[COLOR].values
@@ -141,6 +151,7 @@ def test_find_tfl_lights(row: Series, args: Namespace) -> DataFrame:
         plt.imshow(image)
         plt.title('Original image')
         plt.suptitle("When you zoom on one, the other zooms too :-)")
+        # plt.savefig(fname=f"../result/{row[SEQ_IMAG]}-{row[NAME]}.png", format='png', bbox_inches='tight')
 
     return attention
 

@@ -1,9 +1,10 @@
 from typing import Dict, Any
 
 from consts import CROP_DIR, CROP_RESULT, SEQ, IS_TRUE, IGNOR, CROP_PATH, X0, X1, Y0, Y1, COLOR, SEQ_IMAG, COL, X, Y, \
-    GTIM_PATH
+    GTIM_PATH, RADIUS, IMAG_PATH
 
 from pandas import DataFrame
+from PIL import Image
 
 
 def make_crop(*args, **kwargs):
@@ -15,7 +16,28 @@ def make_crop(*args, **kwargs):
     'y0'  The smaller y value (the lower corner)
     'y1'  The bigger y value (the higher corner)
     """
-    return 1, 2, 3, 4, 'crop_data'
+    '''
+    for x in args[0]:
+        for y in args[1]:
+            for color in args[2]:
+                for radius in args[3]:
+                    pass
+    '''
+
+    if args[2] == 'r':
+        x0 = args[0] + args[3]*2 + 10
+        x1 = args[0] - args[3]*2 - 10
+        y0 = args[1] + args[3]*50
+        y1 = args[1] - args[3]*2 - 10
+        color = args[2]
+    else:
+        x0 = args[0] + args[3]*2 + 10
+        x1 = args[0] - args[3]*2 - 10
+        y0 = args[1] + args[3]*2 - 10
+        y1 = args[1] - args[3]*50
+        color = args[2]
+
+    return x0, x1, y0, y1, color
 
 
 def check_crop(*args, **kwargs):
@@ -24,6 +46,7 @@ def check_crop(*args, **kwargs):
     Try using the ground truth to do that (Hint: easier than you think for the simple cases, and if you found a hard
     one, just ignore it for now :). )
     """
+
     return True, True
 
 
@@ -53,11 +76,19 @@ def create_crops(df: DataFrame) -> DataFrame:
 
         # example code:
         # ******* rewrite ONLY FROM HERE *******
-        x0, x1, y0, y1, crop = make_crop(df[X], df[Y], 'and_everything_else_you_need_here (and you need)')
+        x0, x1, y0, y1, crop = make_crop(row[X], row[Y], row[COLOR], row[RADIUS])
         result_template[X0], result_template[X1], result_template[Y0], result_template[Y1] = x0, x1, y0, y1
-        crop_path: str = '/data/crops/my_crop_unique_name.probably_containing_the original_image_name+somthing_unique'
-        # crop.save(CROP_DIR / crop_path)
-        result_template[CROP_PATH] = crop_path
+
+        image_path = row[IMAG_PATH]
+        original_image = Image.open(image_path)
+
+        # Crop the image using the crop coordinates
+        cropped_image = original_image.crop((x1, y1, x0, y0))
+
+        # Save the cropped image
+        crop_path = f'../data/crops/{row[SEQ_IMAG]}_{row[X]}_{row[Y]}_{row[COLOR]}.jpg'
+        cropped_image.save(crop_path)
+
         result_template[IS_TRUE], result_template[IGNOR] = check_crop(df[GTIM_PATH],
                                                                       crop,
                                                                       'everything_else_you_need_here')
