@@ -86,7 +86,7 @@ def create_crops(df: DataFrame) -> DataFrame:
         cropped_image = original_image.crop((x1, y1, x0, y0))
 
         # Save the cropped image
-        crop_path = f'../data/crops/{row[SEQ_IMAG]}_{row[X]}_{row[Y]}_{row[COLOR]}.jpg'
+        crop_path = f'../data/crops/{row[SEQ_IMAG]}_{row[X]}_{row[Y]}_{row[COLOR]}.png'
         cropped_image.save(crop_path)
 
         result_template[IS_TRUE], result_template[IGNOR] = check_crop(df[GTIM_PATH],
