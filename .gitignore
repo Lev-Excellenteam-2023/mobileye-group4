@@ -1,4 +1,6 @@
 *.png
 *.json
 *.csv
+*.jpeg
+*.pyc
 __pycache__/
