@@ -1,5 +1,8 @@
 from typing import Dict, Any
 
+import cv2
+import numpy as np
+
 from consts import CROP_DIR, CROP_RESULT, SEQ, IS_TRUE, IGNOR, CROP_PATH, X0, X1, Y0, Y1, COLOR, SEQ_IMAG, COL, X, Y, \
     GTIM_PATH, RADIUS, IMAG_PATH
 
@@ -25,19 +28,19 @@ def make_crop(*args, **kwargs):
     '''
 
     if args[2] == 'r':
-        x0 = args[0] + args[3]*2 + 10
-        x1 = args[0] - args[3]*2 - 10
-        y0 = args[1] + args[3]*50
-        y1 = args[1] - args[3]*2 - 10
+        x0 = args[0] + args[3]*2
+        x1 = args[0] - args[3]*2
+        y0 = args[1] + args[3]*5
+        y1 = args[1] - args[3]*2
         color = args[2]
     else:
-        x0 = args[0] + args[3]*2 + 10
-        x1 = args[0] - args[3]*2 - 10
-        y0 = args[1] + args[3]*2 - 10
-        y1 = args[1] - args[3]*50
+        x0 = args[0] + args[3]*2
+        x1 = args[0] - args[3]*2
+        y0 = args[1] + args[3]*2
+        y1 = args[1] - args[3]*5
         color = args[2]
 
-    return x0, x1, y0, y1, color
+    return int(x0), int(x1), int(y0), int(y1), color
 
 
 def check_crop(*args, **kwargs):
@@ -82,12 +85,11 @@ def create_crops(df: DataFrame) -> DataFrame:
         image_path = row[IMAG_PATH]
         original_image = Image.open(image_path)
 
-        # Crop the image using the crop coordinates
         cropped_image = original_image.crop((x1, y1, x0, y0))
+        resized_image = cropped_image.resize((30, 90))
 
-        # Save the cropped image
         crop_path = f'../data/crops/{row[SEQ_IMAG]}_{row[X]}_{row[Y]}_{row[COLOR]}.png'
-        cropped_image.save(crop_path)
+        resized_image.save(crop_path)
 
         result_template[IS_TRUE], result_template[IGNOR] = check_crop(df[GTIM_PATH],
                                                                       crop,

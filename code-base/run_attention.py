@@ -25,6 +25,7 @@ import scipy.ndimage as ndimage
 from scipy.ndimage import maximum_filter
 from PIL import Image
 import matplotlib.pyplot as plt
+import cv2
 from filters_and_threshold import *
 
 
@@ -67,6 +68,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs) -> Dict[str, Any]:
     :return: Dictionary with at least the following keys: 'x', 'y', 'col', each containing a list (same lengths).
     # Note there are no explicit strings in the code-base. ALWAYS USE A CONSTANT VARIABLE INSTEAD!.
     """
+    # open_kernel(c_image)
 
     # Okay... Here's an example of what this function should return. You will write your own of course
     x_red: List[float] = []
@@ -74,20 +76,17 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs) -> Dict[str, Any]:
     x_green: List[float] = []
     y_green: List[float] = []
 
-    test = beny_threshold(c_image)
-    show_image_and_gt(test, None)
-    """
-    low_pass_image = low_pass_filter(c_image)
-    red_image_thresholding = red_thresholding(low_pass_image)
-    high_pass_filter_on_red = high_pass_filter(red_thresholding)
-    maximum_filter_on_red = maximum_filter(high_pass_filter_on_red, size=10)
-    show_image_and_gt(maximum_filter_on_red, None)
-    """
-    red_coordinates, radius_coordinates = get_coordinates(test)
+    red_lights = red_threshold(c_image)
+    green_lights = green_threshold(c_image)
+    red_coordinates, red_radius_coordinates = get_coordinates(red_lights)
+    green_coordinates, green_radius_coordinates = get_coordinates(green_lights)
 
     for coordinate in red_coordinates:
         x_red.append(coordinate[0])
         y_red.append(coordinate[1])
+    for coordinate in green_coordinates:
+        x_green.append(coordinate[0])
+        y_green.append(coordinate[1])
 
     if kwargs.get('debug', False):
         # This is here just so you know you can do it... Look at parse_arguments() for details
@@ -96,7 +95,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs) -> Dict[str, Any]:
 
     return {X: x_red + x_green,
             Y: y_red + y_green,
-            RADIUS: 1,
+            RADIUS: red_radius_coordinates + green_radius_coordinates,
             COLOR: [RED] * len(x_red) + [GRN] * len(x_green),
             }
 
