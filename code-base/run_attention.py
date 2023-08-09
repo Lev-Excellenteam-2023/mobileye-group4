@@ -26,7 +26,7 @@ from scipy.ndimage import maximum_filter
 from PIL import Image
 import matplotlib.pyplot as plt
 import cv2
-from filters_and_threshold import *
+from filters_and_threshold import green_threshold, red_threshold
 
 
 def get_coordinates(image):

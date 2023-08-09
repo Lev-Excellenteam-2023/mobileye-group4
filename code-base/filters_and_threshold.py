@@ -2,8 +2,6 @@ import numpy as np
 from scipy import signal as sg
 import cv2
 from scipy.ndimage import maximum_filter
-from run_attention import *
-import run_attention
 
 
 def red_threshold(image):
@@ -68,6 +66,42 @@ def green_threshold(image):
     maximum_filter(green_image, 20, output=green_image)
     final_image = np.dstack((red_image, green_image, blue_image)).clip(0, 1).astype(np.float32)
     return final_image.astype(np.float32)
+
+
+def thresholding_for_crop(image, color: str):
+    image = image * 255
+    image = np.clip(image, 0, 255).astype(np.uint8)
+
+    low_kernel = np.full((3, 3), 1 / 9).astype(np.uint8)
+
+    hing_kernel = np.full((3, 3), -1 / 9).astype(np.uint8)
+    hing_kernel[1, 1] = 8 / 9
+
+    mask = None
+    if color == 'r':
+        mask1 = cv2.inRange(image, (200, 100, 100), (255, 255, 255))
+        mask2 = cv2.inRange(image, (156, 80, 60), (185, 150, 120))
+        mask = cv2.bitwise_or(mask1, mask2)
+    else:
+        mask = cv2.inRange(image, (120, 130, 90), (255, 255, 255))
+
+    result = cv2.bitwise_and(image, image, mask=mask)
+
+    red_image = result[:, :, 0]
+    green_image = result[:, :, 1]
+    blue_image = result[:, :, 2]
+
+    if color == 'r':
+        maximum_filter(red_image, 3, output=red_image)
+        green_image = sg.convolve2d(green_image, low_kernel, mode='same')
+    else:
+        maximum_filter(green_image, 3, output=green_image)
+        red_image = sg.convolve2d(red_image, low_kernel, mode='same')
+
+    blue_image = sg.convolve2d(blue_image, low_kernel, mode='same')
+
+    final_image = np.dstack((red_image, green_image, blue_image)).clip(0, 255).astype(np.float32)
+    return final_image / 255
 
 """
 def open_kernel(c_image):

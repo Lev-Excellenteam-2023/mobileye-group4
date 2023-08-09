@@ -8,6 +8,7 @@ from consts import CROP_DIR, CROP_RESULT, SEQ, IS_TRUE, IGNOR, CROP_PATH, X0, X1
 
 from pandas import DataFrame
 from PIL import Image
+from filters_and_threshold import thresholding_for_crop
 
 
 def make_crop(*args, **kwargs):
@@ -82,11 +83,11 @@ def create_crops(df: DataFrame) -> DataFrame:
         x0, x1, y0, y1, crop = make_crop(row[X], row[Y], row[COLOR], row[RADIUS])
         result_template[X0], result_template[X1], result_template[Y0], result_template[Y1] = x0, x1, y0, y1
 
-
         image_path = row[IMAG_PATH]
         original_image = Image.open(image_path)
 
         cropped_image = original_image.crop((x1, y1, x0, y0))
+
         resized_image = cropped_image.resize((30, 90))
 
         crop_path = f'../data/crops/{row[SEQ_IMAG]}_{row[X]}_{row[Y]}_{row[COLOR]}.png'
