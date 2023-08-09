@@ -72,15 +72,15 @@ def green_threshold(image):
     final_image = np.dstack((red_image, green_image, blue_image)).clip(0, 1).astype(np.float32)
     return final_image.astype(np.float32)
 
-
+"""
 def open_kernel(c_image):
-    """
+    '''
     original_image = Image.open(f"..\\data\\fullImages"
                                 f"\\bochum_000000_001097_leftImg8bit.png")
     x, y, x1, y1 = 1209, 26, 1234, 51
     cropped_image = original_image.crop((x, y, x1, y1))
     cropped_image.save(f"..\\kernel.png")
-    """
+    '''
 
     image_kernel = np.array(Image.open(f"..\\kernel.png"), dtype=np.float32) / 255
     kernel_size = (6, 6)
@@ -143,7 +143,7 @@ def open_kernel(c_image):
     return normalized_high_pass_kernel
 
 
-"""
+
 def red_thresholding(image):
 
     # red masks
