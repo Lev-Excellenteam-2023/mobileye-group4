@@ -7,18 +7,15 @@ import run_attention
 
 
 def red_threshold(image):
-    image = image * 255
-    image = np.clip(image, 0, 255).astype(np.uint8)
-
-    low_kernel = np.full((7, 7), 1 / 49).astype(np.float32)
+    low_kernel = np.full((9, 9), 1 / 81).astype(np.float32)
 
     hing_kernel = np.full((3, 3), -1 / 9).astype(np.float32)
     hing_kernel[1, 1] = 8 / 9
 
-    mask1 = cv2.inRange(image, (210, 100, 100), (255, 170, 160))
-    mask2 = cv2.inRange(image, (156, 80, 60), (185, 115, 90))
-    mask3 = cv2.inRange(image, (100, 50, 30), (150, 60, 35))
-    mask4 = cv2.inRange(image, (85, 30, 30), (210, 50, 40))
+    mask1 = cv2.inRange(image, (0.9, 0, 0), (1, 0.6, 0.6))
+    mask2 = cv2.inRange(image, (0.8, 0, 0), (0.9, 0.47, 0.35))
+    mask3 = cv2.inRange(image, (0.7, 0, 0), (0.8, 0.41, 0.32))
+    mask4 = cv2.inRange(image, (0.6, 0, 0), (0.7, 0.11, 0.11))
 
     mask = cv2.bitwise_or(mask1, mask2)
     mask = cv2.bitwise_or(mask, mask3)
@@ -36,9 +33,9 @@ def red_threshold(image):
     green_image = sg.convolve2d(green_image, low_kernel, mode='same')
     blue_image = sg.convolve2d(blue_image, low_kernel, mode='same')
 
-    final_image = np.dstack((red_image, green_image, blue_image)).clip(0, 255).astype(np.uint8)
+    final_image = np.dstack((red_image, green_image, blue_image)).clip(0, 1).astype(np.float32)
 
-    return final_image.astype(np.float32) / 255
+    return final_image
 
 
 def green_threshold(image):

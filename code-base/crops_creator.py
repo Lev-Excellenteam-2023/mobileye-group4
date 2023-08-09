@@ -82,6 +82,7 @@ def create_crops(df: DataFrame) -> DataFrame:
         x0, x1, y0, y1, crop = make_crop(row[X], row[Y], row[COLOR], row[RADIUS])
         result_template[X0], result_template[X1], result_template[Y0], result_template[Y1] = x0, x1, y0, y1
 
+
         image_path = row[IMAG_PATH]
         original_image = Image.open(image_path)
 
@@ -89,6 +90,8 @@ def create_crops(df: DataFrame) -> DataFrame:
         resized_image = cropped_image.resize((30, 90))
 
         crop_path = f'../data/crops/{row[SEQ_IMAG]}_{row[X]}_{row[Y]}_{row[COLOR]}.png'
+        result_template[CROP_PATH] = crop_path
+
         resized_image.save(crop_path)
 
         result_template[IS_TRUE], result_template[IGNOR] = check_crop(df[GTIM_PATH],
